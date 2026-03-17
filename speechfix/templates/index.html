@@ -23,214 +23,263 @@
 
 <body>
 <div class="app-wrapper">
-
-  <!-- ═══════════════════════════ HEADER ══════════════════════════════ -->
+ 
+  <!-- ════════════════════ MASTHEAD ════════════════════════════════ -->
   <header class="masthead">
     <h1 class="masthead-title">🎙 <span>SPEECH</span>FIX</h1>
-    <p class="tagline">OpenAI Whisper · FFmpeg · Gemini Flash — speak, transcribe, enhance</p>
+    <p class="tagline">OpenAI Whisper · Gemini Flash · Interview Practice</p>
   </header>
-
-  <!-- ══════════════════════════ SETTINGS ═════════════════════════════ -->
-  <div class="d-flex justify-content-end mb-3">
-    <button class="settings-toggle" type="button"
-            data-bs-toggle="collapse" data-bs-target="#settingsPanel"
-            aria-expanded="false" aria-controls="settingsPanel">
-      <i class="bi bi-sliders"></i>
-      Settings
-      <i class="bi bi-chevron-down"></i>
+ 
+  <!-- ════════════════ STAGE PROGRESS NAV ══════════════════════════ -->
+  <div class="stage-nav" id="stage-nav">
+ 
+    <div class="stage-step active" data-step="0">
+      <div class="step-node active"><span>1</span></div>
+      <div class="step-label">Topic</div>
+    </div>
+    <div class="step-connector" id="con-01"></div>
+ 
+    <div class="stage-step" data-step="1">
+      <div class="step-node"><span>2</span></div>
+      <div class="step-label">Mic</div>
+    </div>
+    <div class="step-connector" id="con-12"></div>
+ 
+    <div class="stage-step" data-step="2">
+      <div class="step-node"><span>3</span></div>
+      <div class="step-label">Question</div>
+    </div>
+    <div class="step-connector" id="con-23"></div>
+ 
+    <div class="stage-step" data-step="3">
+      <div class="step-node"><span>4</span></div>
+      <div class="step-label">Record</div>
+    </div>
+    <div class="step-connector" id="con-34"></div>
+ 
+    <div class="stage-step" data-step="4">
+      <div class="step-node"><span>5</span></div>
+      <div class="step-label">Results</div>
+    </div>
+ 
+  </div>
+ 
+  <!-- ════════════════════════════════════════════════════════════════
+       STAGE 0 — Topic & difficulty selection
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="stage active" id="stage-0">
+    <div class="glass-card">
+      <div class="sec-label">Session Setup</div>
+      <p class="stage-heading">Choose your<br>topic.</p>
+      <p class="stage-sub">Gemini will generate a tailored scenario question based on your selection.</p>
+ 
+      <div class="sec-label">Topic</div>
+      <div class="pill-group" id="topic-group">
+        <div class="pill-opt selected" data-value="behavioral">Behavioural</div>
+        <div class="pill-opt" data-value="technical">Technical</div>
+        <div class="pill-opt" data-value="situational">Situational</div>
+        <div class="pill-opt" data-value="leadership">Leadership</div>
+        <div class="pill-opt" data-value="communication">Communication</div>
+        <div class="pill-opt" data-value="problem_solving">Problem Solving</div>
+      </div>
+ 
+      <hr class="sf">
+ 
+      <div class="sec-label">Difficulty</div>
+      <div class="pill-group" id="diff-group">
+        <div class="pill-opt easy selected" data-value="easy">Easy</div>
+        <div class="pill-opt medium" data-value="medium">Medium</div>
+        <div class="pill-opt hard" data-value="hard">Hard</div>
+      </div>
+    </div>
+ 
+    <button class="btn-primary-sf" id="btn-to-mic">
+      Continue <i class="bi bi-arrow-right-short"></i>
     </button>
   </div>
-
-  <div class="collapse mb-3" id="settingsPanel">
-    <div class="glass-card">
-      <div class="sec-label">Configuration</div>
-      <div class="row g-3">
-        <!-- Whisper model -->
-        <div class="col-sm-4">
-          <label class="form-label">Whisper Model</label>
-          <select class="form-select" id="cfgModel">
-            <option value="tiny">Tiny — fastest</option>
-            <option value="base" selected>Base — balanced</option>
-            <option value="small">Small — better</option>
-            <option value="medium">Medium — accurate</option>
-            <option value="large">Large — best</option>
-          </select>
-        </div>
-
-        <!-- Language -->
-        <div class="col-sm-4">
-          <label class="form-label">Language</label>
-          <select class="form-select" id="cfgLang">
-            <option value="">Auto-detect</option>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="ja">Japanese</option>
-            <option value="zh">Chinese</option>
-            <option value="pt">Portuguese</option>
-            <option value="ar">Arabic</option>
-            <option value="ko">Korean</option>
-          </select>
-        </div>
-
-        <!-- Duration -->
-        <div class="col-sm-4">
-          <label class="form-label">Max Duration — <span id="durLabel">30s</span></label>
-          <input type="range" class="form-range mt-2" id="cfgDuration"
-                 min="3" max="120" value="30"
-                 oninput="document.getElementById('durLabel').textContent=this.value+'s'" />
-        </div>
+ 
+  <!-- ════════════════════════════════════════════════════════════════
+       STAGE 1 — Microphone check with live waveform
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="stage" id="stage-1">
+    <div class="glass-card hi">
+      <div class="sec-label">Step 1 — Microphone Check</div>
+      <p class="stage-heading">Mic check.</p>
+      <p class="stage-sub">Speak a few words to confirm your microphone is working before the session starts.</p>
+ 
+      <div class="waveform-wrap">
+        <canvas class="waveform-canvas" id="waveform-mic"></canvas>
+        <div class="vol-track"><div class="vol-fill" id="vol-fill-mic"></div></div>
+      </div>
+ 
+      <div class="mic-status">
+        <div class="mic-dot testing" id="mic-dot"></div>
+        <span id="mic-status-text">Requesting microphone access…</span>
       </div>
     </div>
+ 
+    <button class="btn-primary-sf" id="btn-to-question" disabled>
+      Mic OK — Get My Question <i class="bi bi-arrow-right-short"></i>
+    </button>
+    <button class="btn-primary-sf btn-ghost-sf" style="margin-top:.5rem" onclick="goToStage(0)">
+      <i class="bi bi-arrow-left-short"></i> Back
+    </button>
   </div>
-
-  <!-- ════════════════════════ MIC / RECORD ═══════════════════════════ -->
-  <div class="glass-card">
-    <div class="mic-section">
-
-      <!-- Animated mic orb -->
-      <div class="mic-orbit" id="micOrbit">
-        <div class="mic-orbit-ring"></div>
-        <div class="mic-core" id="micCore">🎙️</div>
+ 
+  <!-- ════════════════════════════════════════════════════════════════
+       STAGE 2 — Question display
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="stage" id="stage-2">
+    <div class="glass-card hi">
+      <div class="sec-label">Step 2 — Your Question</div>
+      <p class="stage-heading">Think,<br>then speak.</p>
+      <p class="stage-sub">Read the question carefully. Press Record when you're ready to answer.</p>
+      <hr class="sf">
+ 
+      <!-- Loading state -->
+      <div class="loader-row" id="q-loader">
+        <div class="sf-spinner"></div>
+        <span>Generating your question via Gemini…</span>
       </div>
-
-      <!-- Speak button -->
-      <button class="btn-speak" id="btnSpeak" type="button">
-        <i class="bi bi-mic-fill me-2"></i>Speak
+ 
+      <!-- Question content (populated by JS) -->
+      <div id="q-content" style="display:none">
+        <div class="q-meta">
+          <span class="q-badge" id="q-topic-badge">Behavioural</span>
+          <span class="q-badge" id="q-diff-badge">Easy</span>
+        </div>
+        <p class="q-text" id="q-text"></p>
+        <hr class="sf">
+        <div class="sec-label">Hint</div>
+        <p class="q-hint" id="q-hint"></p>
+      </div>
+    </div>
+ 
+    <button class="btn-primary-sf" id="btn-start-rec" disabled>
+      <i class="bi bi-record-circle"></i> Start Recording
+    </button>
+    <button class="btn-primary-sf btn-ghost-sf" id="btn-new-q" style="margin-top:.5rem">
+      <i class="bi bi-shuffle"></i> Generate New Question
+    </button>
+  </div>
+ 
+  <!-- ════════════════════════════════════════════════════════════════
+       STAGE 3 — Active recording
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="stage" id="stage-3">
+    <div class="glass-card hi">
+      <div class="sec-label">Step 3 — Recording</div>
+ 
+      <div class="rec-bar">
+        <span class="rec-pill"><span class="rec-dot"></span> REC</span>
+        <span class="rec-pill" style="color:var(--text-1)" id="rec-timer-sm">00:00</span>
+      </div>
+ 
+      <div class="rec-timer" id="rec-timer-lg">00:00</div>
+ 
+      <div class="waveform-wrap">
+        <canvas class="waveform-canvas" id="waveform-rec"></canvas>
+      </div>
+    </div>
+ 
+    <!-- HTMX form — multipart post to FastAPI -->
+    <form id="rec-form"
+          hx-post="/api/v1/speech/analyze"
+          hx-target="#analysis-result"
+          hx-swap="innerHTML"
+          hx-encoding="multipart/form-data"
+          hx-on::after-request="onAnalysisDone()">
+ 
+      <input type="hidden" name="topic"      id="form-topic" />
+      <input type="hidden" name="difficulty" id="form-difficulty" />
+      <input type="file"   name="audio_file" id="audio-file-input" style="display:none" accept="audio/*" />
+ 
+      <!-- Shown while HTMX request is in flight -->
+      <div class="glass-card" id="submit-htmx-loader">
+        <div class="loader-row">
+          <div class="sf-spinner"></div>
+          <span>Transcribing with Whisper &amp; analysing with Gemini…</span>
+        </div>
+      </div>
+ 
+      <button type="submit" class="btn-primary-sf" id="btn-submit-rec">
+        <i class="bi bi-send-fill"></i> Submit Answer
       </button>
-
-      <!-- Status badge -->
-      <div class="status-badge idle mt-3" id="statusBadge">
-        <div class="status-dot"></div>
-        <span id="statusText">Ready to record</span>
-        <div class="waveform" id="waveform">
-          <span></span><span></span><span></span>
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <!-- Countdown bar -->
-      <div class="countdown-wrap" id="countdownWrap">
-        <div class="countdown-label" id="countdownLabel">Listening · 0s</div>
-        <div class="countdown-track">
-          <div class="countdown-fill" id="countdownFill"></div>
-        </div>
-      </div>
-    </div>
+    </form>
+ 
+    <button class="btn-primary-sf btn-danger-sf" id="btn-discard" style="margin-top:.5rem">
+      <i class="bi bi-trash"></i> Discard &amp; Re-record
+    </button>
   </div>
-
-  <!-- ═══════════════════════ TRANSCRIPT OUTPUT ════════════════════════ -->
-  <div id="transcriptSection" style="display:none;">
-    <div class="glass-card" style="position:relative;">
-      <div class="processing-overlay" id="transcriptOverlay">
-        <div class="spinner-border text-warning" style="width:1.8rem;height:1.8rem;border-width:2px;"></div>
-        <span id="overlayMsg">Transcribing…</span>
-      </div>
-
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <div class="sec-label mb-0">✦ Transcript</div>
-        <div class="d-flex gap-2">
-          <button class="btn-copy" id="btnCopyTranscript" type="button">
-            <i class="bi bi-clipboard me-1"></i>Copy
-          </button>
-          <button class="btn-clear" id="btnClear" type="button">
-            <i class="bi bi-x me-1"></i>Clear
-          </button>
-        </div>
-      </div>
-
-      <div class="transcript-shell">
-        <div class="transcript-text" id="transcriptText"></div>
-      </div>
-
-      <div class="pill-row" id="transcriptPills"></div>
-
-      <!-- Stats row -->
-      <div class="row g-2 mt-3" id="statsRow" style="display:none!important;">
-        <div class="col-4">
-          <div class="stat-box">
-            <div class="stat-val" id="statWords">0</div>
-            <div class="stat-lbl">Words</div>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="stat-box">
-            <div class="stat-val" id="statSentences">0</div>
-            <div class="stat-lbl">Sentences</div>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="stat-box">
-            <div class="stat-val" id="statRead">0s</div>
-            <div class="stat-lbl">Read time</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════ GEMINI FLASH SECTION ══════════════════════ -->
-    <div class="glass-card" style="position:relative;">
-      <div class="processing-overlay" id="geminiOverlay">
-        <div class="spinner-border" style="width:1.8rem;height:1.8rem;border-width:2px;color:var(--cyan);"></div>
-        <span>Gemini thinking…</span>
-      </div>
-
-      <div class="sec-label">⚡ Gemini Flash</div>
-
-      <!-- Mode chips -->
-      <div class="mode-grid" id="modeGrid">
-        <button class="mode-chip active" data-mode="smart_summary" type="button">✨ Smart Summary</button>
-        <button class="mode-chip" data-mode="key_takeaways" type="button">🔑 Key Takeaways</button>
-        <button class="mode-chip" data-mode="clean_format" type="button">📝 Clean &amp; Format</button>
-        <button class="mode-chip" data-mode="translate_english" type="button">🌐 Translate</button>
-        <button class="mode-chip" data-mode="qa_insights" type="button">❓ Q&amp;A Insights</button>
-        <button class="mode-chip" data-mode="casual_rewrite" type="button">💬 Casual Rewrite</button>
-      </div>
-
-      <div class="d-flex gap-2 align-items-center mb-3">
-        <button class="btn-run" id="btnRunGemini" type="button">
-          <i class="bi bi-lightning-charge-fill"></i>
-          <span id="btnRunLabel">Run</span>
-          <div class="spinner-border d-none" id="geminiSpinner"></div>
-        </button>
-        <button class="btn-copy" id="btnCopyGemini" type="button" style="display:none;">
-          <i class="bi bi-clipboard me-1"></i>Copy
-        </button>
-      </div>
-
-      <div id="geminiResult" style="display:none;">
-        <div class="gemini-shell">
-          <div class="gemini-text" id="geminiText"></div>
-        </div>
-        <div class="pill-row" id="geminiPills"></div>
-      </div>
-    </div>
+ 
+  <!-- ════════════════════════════════════════════════════════════════
+       STAGE 4 — Analysis results
+       HTMX injects into #analysis-result
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="stage" id="stage-4">
+    <p class="stage-heading" style="margin-bottom:.25rem">Your<br>feedback.</p>
+    <p class="stage-sub">Whisper transcription + Gemini grammar analysis complete.</p>
+ 
+    <!-- ─────────────────────────────────────────────────────────────
+         HTMX TARGET — FastAPI returns _result_partial.html here.
+         Expected partial structure:
+ 
+         <div class="glass-card">
+           <div class="sec-label">✦ Transcription</div>
+           <div class="transcript-box">{{ transcript }}</div>
+         </div>
+ 
+         <div class="glass-card">
+           <div class="score-wrap">
+             <div class="score-ring">
+               <svg width="68" height="68" viewBox="0 0 68 68">
+                 <circle cx="34" cy="34" r="26" fill="none"
+                         stroke="rgba(255,255,255,.07)" stroke-width="5"/>
+                 <circle cx="34" cy="34" r="26" fill="none"
+                         stroke="var(--cyan)" stroke-width="5"
+                         stroke-dasharray="{{ score * 1.634 }} 163.36"
+                         stroke-linecap="round"/>
+               </svg>
+               <div class="score-val">{{ score }}%</div>
+             </div>
+             <div class="score-info">
+               <div class="title">Grammar Score</div>
+               <div class="lbl">{{ score_label }}</div>
+             </div>
+           </div>
+         </div>
+ 
+         <div class="glass-card">
+           <div class="sec-label">Errors Found</div>
+           <ul class="error-list">
+             {% for err in errors %}
+             <li class="error-item">
+               <div class="err-orig"><i class="bi bi-x me-1"></i>{{ err.original }}</div>
+               <div class="err-fix"><i class="bi bi-check me-1"></i>{{ err.corrected }}</div>
+               <div class="err-explain">{{ err.explanation }}</div>
+             </li>
+             {% endfor %}
+           </ul>
+         </div>
+ 
+         <div class="glass-card">
+           <div class="sec-label">Corrected Version</div>
+           <div class="corrected-box">{{ corrected_text }}</div>
+         </div>
+         ───────────────────────────────────────────────────────────── -->
+    <div id="analysis-result"></div>
+ 
+    <button class="btn-primary-sf" onclick="startOver()" style="margin-top:.5rem">
+      <i class="bi bi-arrow-repeat"></i> Try Another Question
+    </button>
   </div>
-
-  <!-- ═════════════════════════ HISTORY ═══════════════════════════════ -->
-  <div class="glass-card" id="historyCard">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <div class="sec-label mb-0">📜 History</div>
-      <div class="d-flex gap-2 align-items-center">
-        <span class="pill" id="histCount">0 records</span>
-        <button class="btn-clear" id="btnRefreshHistory" type="button">
-          <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-        </button>
-      </div>
-    </div>
-    <div id="historyList">
-      <div class="empty-state">No recordings yet — press Speak to start</div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════ FOOTER ══════════════════════════════ -->
+ 
+  <!-- ════════════════════ FOOTER ══════════════════════════════════ -->
   <footer class="sf-footer">
-    OpenAI Whisper · FFmpeg · Gemini Flash · FastAPI · Bootstrap 5
+    OpenAI Whisper · FFmpeg · Gemini Flash · FastAPI · HTMX · Bootstrap 5
   </footer>
 </div>
-
+ 
 <!-- Toast container -->
 <div class="toast-stack" id="toastStack"></div>
 
