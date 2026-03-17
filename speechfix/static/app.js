@@ -1,376 +1,312 @@
-/* ================================================================
-   WhisperMind Frontend — vanilla JS
-   API base: /api/v1/speech
-   ================================================================ */
-
-const API = '/api/v1/speech';
-
-//  State─
-const state = {
-  recording:    false,
-  mediaRecorder: null,
-  audioChunks:  [],
-  recordStart:  null,
-  timer:        null,
-  transcript:   '',
-  recordId:     null,
-  selectedMode: 'smart_summary',
-};
-
-//  DOM refs
-const $ = id => document.getElementById(id);
-
-const btnSpeak          = $('btnSpeak');
-const micOrbit          = $('micOrbit');
-const statusBadge       = $('statusBadge');
-const statusText        = $('statusText');
-const waveform          = $('waveform');
-const countdownWrap     = $('countdownWrap');
-const countdownFill     = $('countdownFill');
-const countdownLabel    = $('countdownLabel');
-const transcriptSection = $('transcriptSection');
-const transcriptText    = $('transcriptText');
-const transcriptPills   = $('transcriptPills');
-const geminiText        = $('geminiText');
-const geminiResult      = $('geminiResult');
-const geminiPills       = $('geminiPills');
-const historyList       = $('historyList');
-const histCount         = $('histCount');
-
-//  Helpers─
-function toast(msg, type = 'info', duration = 3500) {
-  const icons = { success: 'check-circle', error: 'exclamation-triangle', info: 'info-circle' };
+// ═══════════════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════════════
+let currentStage  = 0;
+let selectedTopic = 'behavioral';
+let selectedDiff  = 'easy';
+ 
+let micStream    = null;
+let audioCtx     = null;
+let analyser     = null;
+let waveRaf      = null;
+ 
+let mediaRec     = null;
+let audioChunks  = [];
+let recSecs      = 0;
+let recTick      = null;
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Toast
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, ms = 2800) {
   const el = document.createElement('div');
-  el.className = `sf-toast ${type}`;
-  el.innerHTML = `<i class="bi bi-${icons[type] || 'info-circle'}"></i><span>${msg}</span>`;
-  $('toastStack').appendChild(el);
-  setTimeout(() => el.remove(), duration);
+  el.className = 'sf-toast';
+  el.textContent = msg;
+  document.getElementById('toastStack').appendChild(el);
+  setTimeout(() => el.remove(), ms);
 }
-
-function setStatus(mode, text) {
-  statusBadge.className = `status-badge ${mode} mt-3`;
-  statusText.textContent = text;
-  waveform.className = mode === 'rec' ? 'waveform active' : 'waveform';
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Stage navigation
+// ═══════════════════════════════════════════════════════════════════
+const CONS = ['con-01','con-12','con-23','con-34'];
+ 
+function goToStage(n) {
+  document.getElementById('stage-' + currentStage).classList.remove('active');
+ 
+  document.querySelectorAll('.stage-step').forEach((s, i) => {
+    const node = s.querySelector('.step-node');
+    node.classList.remove('active','done');
+    s.classList.remove('active');
+    if (i < n)  node.classList.add('done');
+    if (i === n) { node.classList.add('active'); s.classList.add('active'); }
+  });
+ 
+  CONS.forEach((id, i) => {
+    const c = document.getElementById(id);
+    if (c) c.classList.toggle('done', i < n);
+  });
+ 
+  currentStage = n;
+  document.getElementById('stage-' + n).classList.add('active');
+ 
+  if (n === 1) initMicCheck();
+  if (n === 2) fetchQuestion();
+  if (n === 3) startRecording();
+  if (n === 4) stopMicAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-function pill(label, type = '') {
-  return `<span class="pill ${type}">${label}</span>`;
-}
-
-function wordCount(text) {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
-}
-
-function fmtDate(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
-// Copy-to-clipboard helper
-function setupCopyBtn(btnId, getTextFn) {
-  const btn = $(btnId);
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    navigator.clipboard.writeText(getTextFn()).then(() => {
-      btn.classList.add('copied');
-      btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Copied!';
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy';
-      }, 2000);
-    });
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Pill selectors
+// ═══════════════════════════════════════════════════════════════════
+function setupPills(groupId, cb) {
+  document.getElementById(groupId).addEventListener('click', e => {
+    const p = e.target.closest('.pill-opt');
+    if (!p) return;
+    document.querySelectorAll('#' + groupId + ' .pill-opt').forEach(x => x.classList.remove('selected'));
+    p.classList.add('selected');
+    cb(p.dataset.value);
   });
 }
-
-//  Mode chips
-document.querySelectorAll('.mode-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    state.selectedMode = chip.dataset.mode;
-  });
-});
-
-//  Recording logic ─
-btnSpeak.addEventListener('click', () => {
-  if (state.recording) return;
-  startRecording();
-});
-
-async function startRecording() {
+ 
+setupPills('topic-group', v => { selectedTopic = v; });
+setupPills('diff-group',  v => { selectedDiff  = v; });
+ 
+document.getElementById('btn-to-mic').addEventListener('click', () => goToStage(1));
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Stage 1 — Mic check + live waveform
+// ═══════════════════════════════════════════════════════════════════
+async function initMicCheck() {
+  stopMicAll();
+  const dot  = document.getElementById('mic-dot');
+  const txt  = document.getElementById('mic-status-text');
+  const btn  = document.getElementById('btn-to-question');
+ 
+  dot.className = 'mic-dot testing';
+  txt.textContent = 'Requesting microphone access…';
+ 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    state.audioChunks = [];
-    state.recording = true;
-    state.recordStart = Date.now();
-
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm';
-
-    state.mediaRecorder = new MediaRecorder(stream, { mimeType });
-    state.mediaRecorder.ondataavailable = e => { if (e.data.size) state.audioChunks.push(e.data); };
-    state.mediaRecorder.onstop = handleRecordingStop;
-    state.mediaRecorder.start(250);  // collect in 250 ms chunks
-
-    // UI
-    btnSpeak.disabled = true;
-    micOrbit.classList.add('is-listening');
-    setStatus('rec', 'Recording…');
-    countdownWrap.classList.add('visible');
-
-    const maxDur = parseInt($('cfgDuration').value, 10);
-    let elapsed = 0;
-    state.timer = setInterval(() => {
-      elapsed++;
-      const pct = Math.min((elapsed / maxDur) * 100, 100);
-      countdownFill.style.width = pct + '%';
-      countdownLabel.textContent = `Listening · ${elapsed}s`;
-      if (elapsed >= maxDur) stopRecording();
-    }, 1000);
-
-  } catch (err) {
-    toast('Microphone access denied — ' + err.message, 'error');
-    console.error(err);
-  }
-}
-
-function stopRecording() {
-  if (!state.recording) return;
-  clearInterval(state.timer);
-  state.mediaRecorder.stop();
-  state.mediaRecorder.stream.getTracks().forEach(t => t.stop());
-  state.recording = false;
-}
-
-// Stop button (double-click mic to stop early)
-micOrbit.addEventListener('dblclick', stopRecording);
-$('micCore').title = 'Double-click to stop early';
-
-async function handleRecordingStop() {
-  // Reset UI
-  micOrbit.classList.remove('is-listening');
-  btnSpeak.disabled = false;
-  countdownWrap.classList.remove('visible');
-  countdownFill.style.width = '0%';
-
-  setStatus('proc', 'Transcribing…');
-  transcriptSection.style.display = 'block';
-  $('transcriptOverlay').classList.add('visible');
-  $('overlayMsg').textContent = 'Transcribing…';
-
-  const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
-  const duration = ((Date.now() - state.recordStart) / 1000).toFixed(1);
-
-  const fd = new FormData();
-  fd.append('file', blob, 'recording.webm');
-  fd.append('whisper_model', $('cfgModel').value);
-  const lang = $('cfgLang').value;
-  if (lang) fd.append('language', lang);
-
-  try {
-    const res = await fetch(`${API}/transcribe`, { method: 'POST', body: fd });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || res.statusText);
-    }
-    const data = await res.json();
-
-    state.transcript = data.transcript;
-    state.recordId   = data.record_id;
-
-    transcriptText.textContent = data.transcript;
-
-    // Pills
-    const wc  = data.word_count || wordCount(data.transcript);
-    const dur = data.duration_sec ? `${data.duration_sec}s` : `~${duration}s`;
-    transcriptPills.innerHTML =
-      pill(`⏱ ${dur}`, 'pill-amber') +
-      pill(`📝 ${wc} words`, 'pill-amber') +
-      pill(`Whisper ${data.whisper_model}`) +
-      pill('FFmpeg');
-
-    // Stats (fetch analysis)
-    fetchAnalysis(data.record_id);
-
-    setStatus('success', 'Transcription complete');
-    toast('Transcription ready!', 'success');
-
-    // Refresh history
-    loadHistory();
-
-  } catch (err) {
-    transcriptText.textContent = `⚠️ Error: ${err.message}`;
-    setStatus('error', 'Transcription failed');
-    toast('Transcription failed — ' + err.message, 'error');
-    console.error(err);
-  } finally {
-    $('transcriptOverlay').classList.remove('visible');
-  }
-}
-
-//  Analysis / stats 
-async function fetchAnalysis(recordId) {
-  try {
-    const res = await fetch(`${API}/analyse/${recordId}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    $('statWords').textContent     = data.word_count;
-    $('statSentences').textContent = data.sentence_count;
-    $('statRead').textContent      = data.reading_time_sec + 's';
-    $('statsRow').style.display    = '';
-  } catch {}
-}
-
-//  Gemini enhance 
-$('btnRunGemini').addEventListener('click', async () => {
-  if (!state.transcript) { toast('Record something first!', 'error'); return; }
-
-  const btn = $('btnRunGemini');
-  const spinner = $('geminiSpinner');
-  const label = $('btnRunLabel');
-
-  btn.disabled = true;
-  spinner.classList.remove('d-none');
-  label.textContent = 'Running…';
-  $('geminiOverlay').classList.add('visible');
-
-  try {
-    const res = await fetch(`${API}/enhance`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        transcript: state.transcript,
-        mode: state.selectedMode,
-        record_id: state.recordId,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || res.statusText);
-    }
-
-    const data = await res.json();
-
-    geminiText.textContent = data.gemini_output;
-    geminiResult.style.display = 'block';
-    $('btnCopyGemini').style.display = '';
-
-    const modeLabel = document.querySelector(`.mode-chip[data-mode="${state.selectedMode}"]`)?.textContent || state.selectedMode;
-    geminiPills.innerHTML =
-      pill(`🤖 Gemini Flash`, 'pill-cyan') +
-      pill(modeLabel, 'pill-cyan');
-
-    toast('Gemini response ready!', 'info');
-    loadHistory();
-
-  } catch (err) {
-    geminiText.textContent = `⚠️ Error: ${err.message}`;
-    geminiResult.style.display = 'block';
-    toast('Gemini failed — ' + err.message, 'error');
-    console.error(err);
-  } finally {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.82;
+    audioCtx.createMediaStreamSource(micStream).connect(analyser);
+ 
+    dot.className  = 'mic-dot ok';
+    txt.textContent = 'Microphone active — speak to see the waveform.';
     btn.disabled = false;
-    spinner.classList.add('d-none');
-    label.textContent = 'Run';
-    $('geminiOverlay').classList.remove('visible');
+    drawWave('waveform-mic', true);
+    toast('✓ Microphone ready');
+  } catch (err) {
+    dot.className  = 'mic-dot fail';
+    txt.textContent = 'Access denied. Allow microphone and refresh.';
+    console.error(err);
   }
-});
-
-//  Clear
-$('btnClear').addEventListener('click', () => {
-  state.transcript = '';
-  state.recordId   = null;
-  transcriptSection.style.display = 'none';
-  geminiResult.style.display = 'none';
-  $('btnCopyGemini').style.display = 'none';
-  $('statsRow').style.display = 'none';
-  setStatus('idle', 'Ready to record');
-});
-
-//  History
-async function loadHistory() {
-  try {
-    const res = await fetch(`${API}/history?limit=20`);
-    if (!res.ok) return;
-    const data = await res.json();
-
-    histCount.textContent = `${data.total} record${data.total !== 1 ? 's' : ''}`;
-
-    if (!data.items.length) {
-      historyList.innerHTML = '<div class="empty-state">No recordings yet — press Speak to start</div>';
-      return;
+}
+ 
+function drawWave(canvasId, showVol = false) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !analyser) return;
+  const ctx2d = canvas.getContext('2d');
+  const buf   = new Uint8Array(analyser.frequencyBinCount);
+ 
+  function frame() {
+    waveRaf = requestAnimationFrame(frame);
+    analyser.getByteTimeDomainData(buf);
+ 
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight || 72;
+ 
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2d.lineWidth   = 1.8;
+    ctx2d.strokeStyle = '#00e5c8';
+    ctx2d.shadowBlur  = 8;
+    ctx2d.shadowColor = 'rgba(0,229,200,.3)';
+    ctx2d.beginPath();
+ 
+    const sw = canvas.width / buf.length;
+    let x = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const y = (buf[i] / 128) * (canvas.height / 2);
+      i === 0 ? ctx2d.moveTo(x, y) : ctx2d.lineTo(x, y);
+      x += sw;
     }
-
-    historyList.innerHTML = data.items.map(item => `
-      <div class="history-entry" id="hist-${item.id}">
-        <div class="hist-meta">
-          #${item.id}
-          &nbsp;·&nbsp; ${fmtDate(item.created_at)}
-          ${item.duration_sec ? `&nbsp;·&nbsp; ${item.duration_sec}s` : ''}
-          ${item.word_count   ? `&nbsp;·&nbsp; ${item.word_count} words` : ''}
-          ${item.gemini_mode  ? `&nbsp;·&nbsp; ${item.gemini_mode.replace('_',' ')}` : ''}
-          <button class="btn-del-hist" data-id="${item.id}" title="Delete">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
-        <div class="hist-transcript">
-          <strong>Transcript:</strong> ${escapeHtml(item.transcript.slice(0, 200))}${item.transcript.length > 200 ? '…' : ''}
-        </div>
-        ${item.gemini_output ? `
-        <div class="hist-gemini mt-1">
-          <strong>Gemini:</strong> ${escapeHtml(item.gemini_output.slice(0, 250))}${item.gemini_output.length > 250 ? '…' : ''}
-        </div>` : ''}
-      </div>
-    `).join('');
-
-    // Delete buttons
-    historyList.querySelectorAll('.btn-del-hist').forEach(btn => {
-      btn.addEventListener('click', () => deleteRecord(parseInt(btn.dataset.id)));
-    });
-
-  } catch (err) {
-    console.error('History load error:', err);
+    ctx2d.lineTo(canvas.width, canvas.height / 2);
+    ctx2d.stroke();
+ 
+    if (showVol) {
+      let sum = 0;
+      buf.forEach(v => sum += Math.abs(v - 128));
+      const pct = Math.min(100, (sum / buf.length / 28) * 100).toFixed(1);
+      const vf = document.getElementById('vol-fill-mic');
+      if (vf) vf.style.width = pct + '%';
+    }
   }
+ 
+  if (waveRaf) cancelAnimationFrame(waveRaf);
+  frame();
 }
-
-async function deleteRecord(id) {
+ 
+function stopMicAll() {
+  if (waveRaf)   { cancelAnimationFrame(waveRaf); waveRaf = null; }
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (audioCtx)  { audioCtx.close().catch(() => {}); audioCtx = null; }
+  analyser = null;
+}
+ 
+document.getElementById('btn-to-question').addEventListener('click', () => goToStage(2));
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Stage 2 — Fetch question from Gemini via backend
+//  GET /api/v1/questions/generate?topic=X&difficulty=Y
+//  Returns JSON { question, hint, topic_label, difficulty_label }
+// ═══════════════════════════════════════════════════════════════════
+async function fetchQuestion() {
+  const loader  = document.getElementById('q-loader');
+  const content = document.getElementById('q-content');
+  const btn     = document.getElementById('btn-start-rec');
+ 
+  loader.style.display  = 'flex';
+  content.style.display = 'none';
+  btn.disabled = true;
+ 
   try {
-    const res = await fetch(`${API}/history/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Delete failed');
-    document.getElementById(`hist-${id}`)?.remove();
-    toast('Record deleted', 'success');
-    loadHistory();
-  } catch (err) {
-    toast('Delete failed — ' + err.message, 'error');
-  }
-}
-
-$('btnRefreshHistory').addEventListener('click', loadHistory);
-
-//  Copy buttons
-setupCopyBtn('btnCopyTranscript', () => state.transcript);
-setupCopyBtn('btnCopyGemini', () => geminiText.textContent);
-
-//  XSS guard─
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-//  Health check on load 
-async function checkHealth() {
-  try {
-    const res = await fetch(`${API}/health`);
+    const res = await fetch(
+      `/api/v1/questions/generate?topic=${encodeURIComponent(selectedTopic)}&difficulty=${encodeURIComponent(selectedDiff)}`
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    if (!data.gemini_configured) toast('Gemini API key not configured — add SPEECH= to .env', 'error', 6000);
-    if (!data.whisper_available) toast('Whisper not installed — pip install openai-whisper', 'error', 6000);
-  } catch {
-    toast('Cannot reach server', 'error');
+ 
+    document.getElementById('q-text').textContent  = data.question;
+    document.getElementById('q-hint').textContent  = data.hint || '';
+    document.getElementById('q-topic-badge').textContent = data.topic_label || selectedTopic;
+ 
+    const db = document.getElementById('q-diff-badge');
+    db.textContent = data.difficulty_label || selectedDiff;
+    db.className   = 'q-badge ' + selectedDiff;
+ 
+    loader.style.display  = 'none';
+    content.style.display = 'block';
+    btn.disabled = false;
+    toast('✓ Question ready');
+  } catch (err) {
+    loader.innerHTML = `<span style="color:var(--danger);font-family:var(--font-mono);font-size:.78rem">
+      Failed to load.
+      <a href="#" style="color:var(--cyan)" onclick="fetchQuestion();return false">Retry</a>
+    </span>`;
+    console.error(err);
   }
 }
-
-//  Init
-checkHealth();
-loadHistory();
+ 
+document.getElementById('btn-start-rec').addEventListener('click', () => goToStage(3));
+document.getElementById('btn-new-q').addEventListener('click', fetchQuestion);
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Stage 3 — Recording
+// ═══════════════════════════════════════════════════════════════════
+async function startRecording() {
+  recSecs     = 0;
+  audioChunks = [];
+  setTimerDisplay(0);
+  recTick = setInterval(() => { recSecs++; setTimerDisplay(recSecs); }, 1000);
+ 
+  try {
+    if (!micStream || micStream.getTracks().some(t => t.readyState === 'ended')) {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+      analyser  = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.8;
+      audioCtx.createMediaStreamSource(micStream).connect(analyser);
+    }
+ 
+    drawWave('waveform-rec', false);
+ 
+    const mime = ['audio/webm;codecs=opus','audio/webm','audio/ogg','audio/mp4']
+                   .find(t => MediaRecorder.isTypeSupported(t)) || '';
+    mediaRec = new MediaRecorder(micStream, mime ? { mimeType: mime } : {});
+    mediaRec.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRec.onstop = bakeBlob;
+    mediaRec.start(100);
+  } catch (err) {
+    toast('⚠ Microphone unavailable');
+    goToStage(1);
+  }
+}
+ 
+function setTimerDisplay(secs) {
+  const t = String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+  document.getElementById('rec-timer-lg').textContent = t;
+  document.getElementById('rec-timer-sm').textContent = t;
+}
+ 
+function bakeBlob() {
+  clearInterval(recTick);
+  stopMicAll();
+  const mime = audioChunks[0]?.type || 'audio/webm';
+  const blob = new Blob(audioChunks, { type: mime });
+  const ext  = mime.includes('mp4') ? 'mp4' : mime.includes('ogg') ? 'ogg' : 'webm';
+  const file = new File([blob], `answer.${ext}`, { type: mime });
+  const dt   = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('audio-file-input').files = dt.files;
+  document.getElementById('form-topic').value        = selectedTopic;
+  document.getElementById('form-difficulty').value   = selectedDiff;
+}
+ 
+document.getElementById('btn-submit-rec').addEventListener('click', e => {
+  e.preventDefault();
+  const stop = () => {
+    goToStage(4);
+    setTimeout(() => htmx.trigger('#rec-form', 'submit'), 120);
+  };
+  if (mediaRec && mediaRec.state !== 'inactive') {
+    mediaRec.addEventListener('stop', stop, { once: true });
+    mediaRec.stop();
+  } else {
+    stop();
+  }
+});
+ 
+document.getElementById('btn-discard').addEventListener('click', () => {
+  if (mediaRec && mediaRec.state !== 'inactive') mediaRec.stop();
+  clearInterval(recTick);
+  stopMicAll();
+  goToStage(2);
+});
+ 
+// ═══════════════════════════════════════════════════════════════════
+//  Stage 4 — After HTMX injects result
+// ═══════════════════════════════════════════════════════════════════
+function onAnalysisDone() {
+  document.getElementById('submit-htmx-loader').style.display = 'none';
+  toast('✓ Analysis complete');
+ 
+  // Animate SVG score ring
+  const ring = document.querySelector('#analysis-result circle[stroke-dasharray]');
+  if (ring) {
+    const target = ring.getAttribute('stroke-dasharray');
+    ring.setAttribute('stroke-dasharray', '0 163.36');
+    ring.style.transition = 'stroke-dasharray .9s cubic-bezier(.4,0,.2,1)';
+    setTimeout(() => ring.setAttribute('stroke-dasharray', target), 60);
+  }
+}
+ 
+function startOver() {
+  document.getElementById('analysis-result').innerHTML = '';
+  audioChunks = [];
+  goToStage(0);
+}
+ 
+// HTMX: show/hide inline loader
+document.body.addEventListener('htmx:beforeRequest', () => {
+  const l = document.getElementById('submit-htmx-loader');
+  if (l) l.style.display = 'block';
+});
+document.body.addEventListener('htmx:afterSettle', () => {
+  const l = document.getElementById('submit-htmx-loader');
+  if (l) l.style.display = 'none';
+});
