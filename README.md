@@ -45,10 +45,67 @@ An AI-powered web service that captures spoken audio from the browser, transcrib
 8. **Persist:** Original text, AI corrections, and explanations are saved to MySQL.
 9. **Render:** FastAPI returns the feedback as an HTML snippet, which HTMX seamlessly injects into the UI.
 
+## Project Structure
+
+```
+grammer_check
+│
+├── speechfix
+│   ├── __init__.py
+|   |
+│   ├── main.py
+|   |
+│   ├── api
+│   │   └── v1
+│   │       ├── router.py
+│   │       └── speech_routes.py
+│   │
+│   ├── core
+│   │   ├── config.py
+│   │   ├── logging.py
+│   │   └── security.py
+│   │
+│   │
+│   ├── models
+│   │   ├── database.py
+│   │   └── speech_record.py
+│   │
+│   ├── schemas
+│   │   ├── request.py
+│   │   └── response.py
+│   │
+│   ├── services
+│   │   ├── analysis_service.py
+│   │   ├── grammar_service.py
+│   │   └── speech_service.py
+│   │
+│   ├── static
+│   │   ├── app.js
+│   │   └── style.css
+│   │
+│   ├── templates
+│   │   └── index.html
+│   │
+│   ├── utils
+│   │   ├── audio_utils.py
+│   │   └── text_utils.py
+│   │
+│   └── workers
+│       └── task_queue.py
+|
+├── docker
+├── scripts
+├── tests
+├── README.md
+├── requirements.txt
+└── .gitignore
+
+```
+
 ## ⚙️ Local Setup & Installation
 
 ### 1. System Requirements
-Before installing Python packages, ensure **FFmpeg** is installed on your system:
+* Before installing Python packages, ensure **FFmpeg** is installed on your system:
 * **Windows:** Download from [ffmpeg.org](https://ffmpeg.org/download.html) and add it to your system PATH.
 * **Mac:** `brew install ffmpeg`
 * **Linux:** `sudo apt update && sudo apt install ffmpeg`
