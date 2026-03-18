@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+
 app = FastAPI(title="SpeechFix API")
 
 BASE_DIR = Path(__file__).resolve().parent
