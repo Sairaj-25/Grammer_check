@@ -31,15 +31,15 @@ async def process_audio(
     
     # If the user submitted silence or transcription failed completely
     if not transcript.strip() or "Transcription Failed" in transcript:
-         context = {
-             "request": request,
-             "transcript": "No speech detected or transcription failed.",
-             "score": 0,
-             "score_label": "N/A",
-             "errors": [],
-             "corrected_text": "Please try recording again and speak clearly."
-         }
-         return templates.TemplateResponse("_result.html", context)
+     context = {
+         "request": request,
+         "transcript": "No speech detected or transcription failed.",
+         "score": 0,
+         "score_label": "N/A",
+         "errors": [],
+         "corrected_text": "Please try recording again and speak clearly."
+     }
+     return templates.TemplateResponse("result_partial.html", context)
 
     # Step 2: Analyze with Gemini (Run in thread pool)
     analysis_data = await loop.run_in_executor(

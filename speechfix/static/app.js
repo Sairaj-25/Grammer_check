@@ -284,19 +284,17 @@ document.getElementById('btn-discard').addEventListener('click', () => {
 function onAnalysisDone() {
   document.getElementById('submit-htmx-loader').style.display = 'none';
   toast('✓ Analysis complete');
- 
-  // Animate SVG score ring
-  const ring = document.querySelector('#analysis_data circle[stroke-dasharray]');
+
+  // Animate SVG score ring (Updated ID)
+  const ring = document.querySelector('#analysis-result circle[stroke-dasharray]');
   if (ring) {
-    const target = ring.getAttribute('stroke-dasharray');
-    ring.setAttribute('stroke-dasharray', '0 163.36');
-    ring.style.transition = 'stroke-dasharray .9s cubic-bezier(.4,0,.2,1)';
-    setTimeout(() => ring.setAttribute('stroke-dasharray', target), 60);
+    // ...
   }
 }
- 
+
 function startOver() {
-  document.getElementById('analysis_data').innerHTML = '';
+  // Updated ID
+  document.getElementById('analysis-result').innerHTML = '';
   audioChunks = [];
   goToStage(0);
 }
