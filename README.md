@@ -1,4 +1,4 @@
-# 🎙️ SpeechFix — Speech Intelligence
+# 🎙️ 🎙️ InterviewIQ AI — Speech Intelligence for Interview Mastery
 
 An AI-powered web service designed for **interview practice and communication improvement**. It captures spoken audio from the browser, transcribes it locally, and provides deep analysis on both grammar and context. Built with **FastAPI**, this project leverages local **faster-whisper** for highly accurate offline speech-to-text and **Google Gemini (2.5 Flash)** to generate dynamic scenarios and suggest grammatical corrections.
 
@@ -66,7 +66,7 @@ Stage 1 → Stage 2 → Stage 3 → Stage 4 → Stage 5
 ## 📂 Project Structure
 
 ```
-grammer_check/
+InterviewIQ/
 │
 ├── speechfix/
 │   ├── __init__.py
