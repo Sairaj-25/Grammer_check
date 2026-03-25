@@ -3,6 +3,7 @@ POST /api/v1/speech/analyze
 Receives a multipart audio upload, transcribes with Faster-Whisper,
 analyses grammar with Gemini, returns the result_partial.html fragment.
 """
+
 import asyncio
 import logging
 from pathlib import Path
@@ -34,9 +35,10 @@ async def process_audio(
     audio_bytes = await audio_file.read()
     logger.info(
         "Received audio upload: %s bytes, topic=%s difficulty=%s",
-        len(audio_bytes), topic, difficulty,
+        len(audio_bytes),
+        topic,
+        difficulty,
     )
-
 
     loop = asyncio.get_running_loop()
 

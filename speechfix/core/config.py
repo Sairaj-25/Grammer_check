@@ -2,6 +2,7 @@
 Application settings — loaded once from .env via pydantic-settings.
 Import get_settings() anywhere to access config values.
 """
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
 
     # Faster-Whisper
-    WHISPER_MODEL_SIZE: str = "base"
+    WHISPER_MODEL_SIZE: str = "small"
     WHISPER_DEVICE: str = "cpu"
     # BUG FIX: was WHISPER_COMPUTE_TYEP (typo) → WHISPER_COMPUTE_TYPE
     WHISPER_COMPUTE_TYPE: str = "int8"

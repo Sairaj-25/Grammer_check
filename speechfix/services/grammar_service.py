@@ -2,6 +2,7 @@
 Grammar & communication analysis service — Google Gemini Flash.
 
 """
+
 import json
 import logging
 
@@ -16,7 +17,8 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-# Response schema 
+
+# Response schema
 class GrammarError(BaseModel):
     original: str
     corrected: str
@@ -47,7 +49,8 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                 
                 Evaluate the answer for grammar, clarity, and relevance to the topic.
                 - Give a score from 0 to 100.
-                - Identify specific grammatical or structural errors.
+                - Identify specific grammatical errors or technical mistakes.
+                - Identify the answer is correct and related to the topic or question.
                 - Explain why each error is wrong.
                 - Provide a fully corrected, professional version of the answer.
                 """

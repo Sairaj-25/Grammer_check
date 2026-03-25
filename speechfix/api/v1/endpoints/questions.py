@@ -2,6 +2,7 @@
 GET /api/v1/questions/generate?topic=X&difficulty=Y
 Returns a JSON { question, hint, topic_label, difficulty_label }.
 """
+
 import asyncio
 import logging
 
@@ -22,7 +23,6 @@ async def get_question(
     ),
 ):
     logger.info("Question request: topic=%s difficulty=%s", topic, difficulty)
-
 
     loop = asyncio.get_running_loop()
     result: dict = await loop.run_in_executor(

@@ -2,6 +2,7 @@
 Interview question generation service — Google Gemini Flash.
 Returns a strict JSON object matching the InterviewQuestion schema.
 """
+
 import json
 import logging
 
@@ -17,7 +18,8 @@ settings = get_settings()
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-# Response schema 
+# Response schema
+
 
 class InterviewQuestion(BaseModel):
     question: str
@@ -26,7 +28,8 @@ class InterviewQuestion(BaseModel):
     difficulty_label: str
 
 
-# Service function 
+# Service function
+
 
 def generate_interview_question(topic: str, difficulty: str) -> dict:
     """

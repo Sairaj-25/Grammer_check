@@ -2,6 +2,7 @@
 SpeechFix — Entry point
 Registers middleware, static files, templates, and the v1 API router.
 """
+
 import logging
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from speechfix.api.v1.router import router as api_v1_router
 
-# Logging 
+# Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -26,7 +27,7 @@ app = FastAPI(
     version="1.2.1",
 )
 
-# Paths 
+# Paths
 
 # main.py lives at speechfix/main.py  →  parent == speechfix/
 BASE_DIR = Path(__file__).resolve().parent
@@ -38,7 +39,7 @@ app.mount(
     name="static",
 )
 
-# Templates 
+# Templates
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # API v1 router (analysis + questions)
@@ -52,7 +53,7 @@ async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-# Health check 
+# Health check
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "SpeechFix"}

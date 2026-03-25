@@ -5,6 +5,7 @@ Singleton pattern: the WhisperModel is loaded once and reused.
 Audio pipeline: raw bytes → pydub → 16 kHz mono 16-bit WAV → temp file → Whisper.
 
 """
+
 import io
 import logging
 import os
