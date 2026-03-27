@@ -73,7 +73,7 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                 words when pointing out errors.
                 
                 ────────────────────────────────────────────────────────
-                1. GRAMMAR & LANGUAGE (20 points)
+                1. GRAMMAR & LANGUAGE
                 ────────────────────────────────────────────────────────
                 - Identify grammatical errors (tense, subject-verb agreement, article
                   usage, prepositions, word choice).
@@ -85,7 +85,7 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                 - Assess fluency, coherence, and professional vocabulary usage.
                 
                 ────────────────────────────────────────────────────────
-                2. TECHNICAL ACCURACY (40 points)
+                2. TECHNICAL ACCURACY
                 ────────────────────────────────────────────────────────
                 Evaluate based on the specific topic domain:
                 
@@ -118,7 +118,7 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                   • Rate severity: [Minor | Moderate | Critical]
                 
                 ────────────────────────────────────────────────────────
-                3. RELEVANCE & COMPLETENESS (25 points)
+                3. RELEVANCE & COMPLETENESS
                 ────────────────────────────────────────────────────────
                 Evaluate based on question category:
                 
@@ -135,7 +135,7 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                 - Identify any critical missing points the candidate should have covered.
                 
                 ────────────────────────────────────────────────────────
-                4. CLARITY & DELIVERY (15 points)
+                4. CLARITY & DELIVERY
                 ────────────────────────────────────────────────────────
                 - Was the answer well-structured (intro → explanation → conclusion)?
                 - Was it concise or unnecessarily verbose?
@@ -148,17 +148,7 @@ def analyze_grammar(transcript: str, topic: str, difficulty: str) -> dict:
                 Return your evaluation in EXACTLY this structure:
                 
                 ---
-                
-                ## 📊 OVERALL SCORE: score / 100
-                
-                | Dimension              | Score | Max |
-                |------------------------|-------|-----|
-                | Grammar & Language     |       |  20 |
-                | Technical Accuracy     |       |  40 |
-                | Relevance & Completeness|      |  25 |
-                | Clarity & Delivery     |       |  15 |
-                
-                ---
+
                 
                 ## ⚙️ TECHNICAL ERRORS
                 
