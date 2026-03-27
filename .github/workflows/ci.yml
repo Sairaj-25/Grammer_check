@@ -1,0 +1,101 @@
+name: InterviewIQ AI CI
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: [main]
+
+
+env:
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+
+jobs:
+    lint-and-security:
+        name: Code Quality & Security
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+
+              with:
+                python-version: "3.11"
+                cache: 'pip'
+
+            - name: Install Linting & Security Tools
+              run: |
+                python -m pip install --upgrade pip
+                pip install ruff bandit
+
+            - name: Format & Lint Code (Ruff)
+              run: |
+                ruff format --check .
+                ruff check .
+
+            - name: Security Scan (Bandit)
+              run: bandit -r . -ll -li -x "venv,env,tests"
+
+
+test:
+  name: Run Django Tests (Python ${{ matrix.python-version }})
+  needs: lint-and-security
+  runs-on: ubuntu-latest
+
+  strategy:
+    matrix:
+      python-version: ["3.11"]
+    fail-fast: false
+
+  
+  env:
+    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-dummy-gemini-key' }}
+
+
+steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies (FFMPEG)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coverage
+
+    
+    - name: Check Databases Migrations
+      run: python manage.py makemigrations --check --dry-run
+
+
+    - name: Run Tests with Coverage
+      run: |
+        coverage run manage.pytest
+        coverage report -m
+        coverage xml
+
+    - name: Upload Coverage Report
+      if: matrix.python-version == '3.11'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
+        retention: 14

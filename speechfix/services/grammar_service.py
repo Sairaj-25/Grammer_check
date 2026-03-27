@@ -24,6 +24,7 @@ class GrammarError(BaseModel):
     corrected: str
     explanation: str
 
+
 class TechnicalError(BaseModel):
     original: str
     corrected: str
