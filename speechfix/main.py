@@ -10,6 +10,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from speechfix.core.database import engine, Base, get_db
+from speechfix.models.db_models import User, Question
 
 from speechfix.api.v1.router import router as api_v1_router
 
@@ -46,6 +50,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app.include_router(api_v1_router, prefix="/api/v1")
 
+# Create Database Tables
+Base.methods.create_all(bind=engine)
 
 # Frontend route
 @app.get("/", response_class=HTMLResponse)
