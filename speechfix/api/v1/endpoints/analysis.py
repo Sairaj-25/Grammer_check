@@ -57,6 +57,7 @@ async def process_audio(
                 "score": 0,
                 "score_label": "N/A",
                 "errors": [],
+                "technical_errors": [],
                 "corrected_text": "Please try recording again and speak clearly.",
             },
         )

@@ -25,9 +25,7 @@
   --transition:   .22s cubic-bezier(.4,0,.2,1);
 }
  
-/* ═══════════════════════════════════════════
-   RESET + BASE
-═══════════════════════════════════════════ */
+/* RESET + BASE */
 *, *::before, *::after { box-sizing: border-box; }
  
 html { scroll-behavior: smooth; }
@@ -42,7 +40,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
  
-/* ── Mesh background ── */
+/*  Mesh background  */
 body::before {
   content: '';
   position: fixed;
@@ -54,7 +52,7 @@ body::before {
     radial-gradient(ellipse 50% 50% at 80% 90%, rgba(0,176,154,.03) 0%, transparent 65%);
 }
  
-/* ── Noise grain overlay ── */
+/*  Noise grain overlay  */
 body::after {
   content: '';
   position: fixed;
@@ -67,9 +65,7 @@ body::after {
   background-size: 128px;
 }
  
-/* ═══════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════ */
+/* NAV */
 .sf-nav {
   position: sticky;
   top: 0;
@@ -123,9 +119,7 @@ body::after {
   background: var(--cyan-glow);
 }
  
-/* ═══════════════════════════════════════════
-   APP WRAPPER
-═══════════════════════════════════════════ */
+/* APP WRAPPER */
 .app-wrapper {
   position: relative;
   z-index: 1;
@@ -134,9 +128,7 @@ body::after {
   padding: 0 1.25rem 6rem;
 }
  
-/* ═══════════════════════════════════════════
-   STAGE PROGRESS NAV
-═══════════════════════════════════════════ */
+/* STAGE PROGRESS NAV */
 .stage-nav {
   display: flex;
   align-items: center;
@@ -234,9 +226,7 @@ body::after {
   box-shadow: 0 0 6px var(--cyan-dim);
 }
  
-/* ═══════════════════════════════════════════
-   GLASS CARD
-═══════════════════════════════════════════ */
+/* GLASS CARD */
 .glass-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -268,9 +258,7 @@ body::after {
   background: linear-gradient(90deg, transparent, rgba(0,229,200,.25), transparent);
 }
  
-/* ═══════════════════════════════════════════
-   SECTION LABEL
-═══════════════════════════════════════════ */
+/* SECTION LABEL */
 .sec-label {
   font-family: var(--font-mono);
   font-size: .68rem;
@@ -293,18 +281,14 @@ body::after {
   opacity: .7;
 }
  
-/* ═══════════════════════════════════════════
-   DIVIDER
-═══════════════════════════════════════════ */
+/* DIVIDER */
 hr.sf {
   border: none;
   border-top: 1px solid var(--border);
   margin: 1.25rem 0;
 }
  
-/* ═══════════════════════════════════════════
-   STAGE VISIBILITY + ANIMATIONS
-═══════════════════════════════════════════ */
+/* STAGE VISIBILITY + ANIMATIONS */
 .stage { display: none; }
  
 .stage.active {
@@ -317,9 +301,7 @@ hr.sf {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
  
-/* ═══════════════════════════════════════════
-   STAGE TYPOGRAPHY
-═══════════════════════════════════════════ */
+/* STAGE TYPOGRAPHY */
 .stage-heading {
   font-family: var(--font-disp);
   font-size: clamp(2.2rem, 6vw, 3.2rem);
@@ -336,9 +318,7 @@ hr.sf {
   margin: 0 0 1.25rem;
 }
  
-/* ═══════════════════════════════════════════
-   PILL SELECTORS
-═══════════════════════════════════════════ */
+/* PILL SELECTORS */
 .pill-group {
   display: flex;
   flex-wrap: wrap;
@@ -392,9 +372,7 @@ hr.sf {
 .pill-opt.medium.selected { border-color: var(--amber);  background: rgba(245,166,35,.1);  color: var(--amber);  box-shadow: 0 0 12px rgba(245,166,35,.15); }
 .pill-opt.hard.selected   { border-color: var(--danger); background: rgba(224,92,92,.1);   color: var(--danger); box-shadow: 0 0 12px rgba(224,92,92,.15); }
  
-/* ═══════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════ */
+/* BUTTONS */
 .btn-primary-sf {
   display: flex;
   align-items: center;
@@ -461,9 +439,7 @@ hr.sf {
   transform: translateY(-1px);
 }
  
-/* ═══════════════════════════════════════════
-   WAVEFORM
-═══════════════════════════════════════════ */
+/* WAVEFORM */
 .waveform-wrap {
   background: var(--bg-base);
   border-radius: var(--radius);
@@ -504,9 +480,7 @@ hr.sf {
   transition: width .06s linear;
 }
  
-/* ═══════════════════════════════════════════
-   MIC STATUS
-═══════════════════════════════════════════ */
+/* MIC STATUS */
 .mic-status {
   display: flex;
   align-items: center;
@@ -542,9 +516,7 @@ hr.sf {
   50%      { box-shadow: 0 0 0 5px rgba(245,166,35,0); }
 }
  
-/* ═══════════════════════════════════════════
-   QUESTION DISPLAY
-═══════════════════════════════════════════ */
+/* QUESTION DISPLAY */
 .q-meta {
   display: flex;
   flex-wrap: wrap;
@@ -587,9 +559,7 @@ hr.sf {
   border: 1px solid var(--border);
 }
  
-/* ═══════════════════════════════════════════
-   LOADER ROW
-═══════════════════════════════════════════ */
+/* LOADER ROW */
 .loader-row {
   display: flex;
   align-items: center;
@@ -614,9 +584,7 @@ hr.sf {
   color: var(--text-1);
 }
  
-/* ═══════════════════════════════════════════
-   RECORDING STAGE
-═══════════════════════════════════════════ */
+/* RECORDING STAGE */
 .rec-bar {
   display: flex;
   align-items: center;
@@ -657,14 +625,10 @@ hr.sf {
   text-shadow: 0 0 32px rgba(0,229,200,.15);
 }
  
-/* ═══════════════════════════════════════════
-   HTMX LOADING STATE
-═══════════════════════════════════════════ */
+/* HTMX LOADING STATE */
 #submit-htmx-loader { display: none; margin-top: 0; }
  
-/* ═══════════════════════════════════════════
-   RESULTS (injected by HTMX)
-═══════════════════════════════════════════ */
+/* RESULTS (injected by HTMX) */
 .transcript-box {
   background: var(--bg-base);
   border-radius: var(--radius);
@@ -725,9 +689,7 @@ hr.sf {
   color: var(--text-0);
 }
  
-/* ═══════════════════════════════════════════
-   STAGE 0 — HERO HEADER
-═══════════════════════════════════════════ */
+/* STAGE 0 — HERO HEADER */
 .hero-header {
   padding: 2.25rem 0 .25rem;
   display: flex;
@@ -774,9 +736,7 @@ hr.sf {
  
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
  
-/* ═══════════════════════════════════════════
-   FOOTER
-═══════════════════════════════════════════ */
+/* FOOTER */
 .sf-footer {
   text-align: center;
   font-family: var(--font-mono);
@@ -791,9 +751,7 @@ hr.sf {
  
 .sf-footer span { color: var(--text-1); }
  
-/* ═══════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════ */
+/* TOAST */
 .toast-stack {
   position: fixed;
   bottom: 1.5rem;
@@ -822,9 +780,7 @@ hr.sf {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
  
-/* ═══════════════════════════════════════════
-   INTERACTIVE HIGHLIGHT ROW (Stage 0)
-═══════════════════════════════════════════ */
+/* INTERACTIVE HIGHLIGHT ROW (Stage 0) */
 .info-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -871,9 +827,7 @@ hr.sf {
   text-align: center;
 }
  
-/* ═══════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════ */
+/* RESPONSIVE */
 @media (max-width: 600px) {
   .app-wrapper { padding: 0 .9rem 5rem; }
   .glass-card  { padding: 1.15rem; }

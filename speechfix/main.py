@@ -48,7 +48,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.include_router(api_v1_router, prefix="/api/v1")
 
 # Create Database Tables
-Base.methods.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 
 # Frontend route

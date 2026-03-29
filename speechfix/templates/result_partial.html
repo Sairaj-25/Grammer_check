@@ -54,8 +54,8 @@
 
   {% elif technical_errors %}
     <div class="sec-label">
-      Errors Found
-      <span style="color:var(--danger);margin-left:.4rem;fontstyle:normal">({{ errors | length }})</span>
+      Technical Errors Found
+      <span style="color:var(--danger);margin-left:.4rem;font-style:normal">({{ technical_errors | length }})</span>
     </div>
 
     <ul class="error-list">
@@ -75,7 +75,10 @@
       </li>
 
     {% endfor %}
+    
+    </ul>
 
+  
   {% else %}
     <div class="sec-label">Errors Found</div>
     <div style="display:flex;align-items:center;gap:.5rem;padding:.35rem 0">
