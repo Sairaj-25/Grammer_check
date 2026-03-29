@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # Faster-Whisper
     WHISPER_MODEL_SIZE: str = "small"
     WHISPER_DEVICE: str = "cpu"
-    # BUG FIX: was WHISPER_COMPUTE_TYEP (typo) → WHISPER_COMPUTE_TYPE
+
     WHISPER_COMPUTE_TYPE: str = "int8"
 
     model_config = SettingsConfigDict(
